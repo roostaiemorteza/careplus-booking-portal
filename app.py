@@ -1,435 +1,604 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import datetime
-import random
-from io import BytesIO
-from streamlit_option_menu import option_menu
+import io
+from datetime import datetime, date
 
-# --- PAGE CONFIGURATION ---
+# ---------------------------------------------------------
+# Page Configuration
+# ---------------------------------------------------------
 st.set_page_config(
-    page_title="CarePlus | Clinic & Medical Tourism Portal",
-    page_icon="🏥",
+    page_title="CarePlus | International Health & Clinic Portal",
+    page_icon="🩺",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- RESPONSIVE & MODERN CUSTOM CSS ---
+# ---------------------------------------------------------
+# Ultra-Modern Medical Theme & CSS Injection
+# ---------------------------------------------------------
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
-    .hero-box {
-        background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
-        color: white;
-        padding: 2.2rem;
-        border-radius: 16px;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 10px 25px rgba(13, 110, 253, 0.18);
-    }
-    .service-card {
-        background: #ffffff;
-        border: 1px solid #e9ecef;
-        border-radius: 14px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .service-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    }
-    .kpi-card {
-        background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
-        border-radius: 14px;
-        padding: 1.2rem;
-        border-left: 5px solid #0d6efd;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        margin-bottom: 1rem;
-    }
-    .kpi-title { font-size: 0.9rem; color: #6c757d; font-weight: 600; }
-    .kpi-value { font-size: 1.8rem; color: #212529; font-weight: 700; margin-top: 4px; }
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
     
-    @media (max-width: 768px) {
-        .hero-box { padding: 1.3rem; }
-        .kpi-value { font-size: 1.4rem; }
+    html, body, [class*="css"] {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    /* Modern Background & Container */
+    .stApp {
+        background: linear-gradient(135deg, #f8fafc 0%, #eef5f9 100%);
+    }
+    
+    /* Hero Banner */
+    .hero-banner {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #0f172a 100%);
+        padding: 40px;
+        border-radius: 24px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 20px 40px -15px rgba(3, 105, 161, 0.35);
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-banner h1 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+        letter-spacing: -0.5px;
+        color: #ffffff;
+    }
+    .hero-banner p {
+        font-size: 1.05rem;
+        opacity: 0.9;
+        max-width: 650px;
+        line-height: 1.6;
+        margin-bottom: 0px;
+    }
+    .hero-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Medical Treatment Cards */
+    .treatment-card {
+        background: #ffffff;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        margin-bottom: 25px;
+    }
+    .treatment-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 35px -8px rgba(2, 132, 199, 0.18);
+        border-color: #38bdf8;
+    }
+    .treatment-img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+    }
+    .treatment-body {
+        padding: 20px;
+    }
+    .treatment-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 6px;
+    }
+    .treatment-doctor {
+        font-size: 0.88rem;
+        color: #64748b;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .treatment-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #f1f5f9;
+        padding-top: 12px;
+        margin-top: 6px;
+    }
+    .treatment-price {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #0284c7;
+    }
+    .tag-badge {
+        background: #e0f2fe;
+        color: #0369a1;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+
+    /* KPI Metric Cards */
+    .kpi-card {
+        background: white;
+        border-radius: 18px;
+        padding: 22px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    .kpi-num {
+        font-size: 2.1rem;
+        font-weight: 800;
+        color: #0284c7;
+        margin: 4px 0;
+    }
+    .kpi-title {
+        font-size: 0.85rem;
+        color: #64748b;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    /* Primary Buttons */
+    .stButton>button {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        border-radius: 12px !important;
+        border: none !important;
+        padding: 10px 24px !important;
+        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3) !important;
+        transition: all 0.2s ease !important;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 20px rgba(2, 132, 199, 0.45) !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- MULTI-LANGUAGE DICTIONARY (TR Default, EN, RU, DE) ---
-TRANSLATIONS = {
-    "🇹🇷 Türkçe": {
-        "lang_code": "TR",
-        "menu_title": "CarePlus Menü",
-        "nav": ["Ana Sayfa", "Randevu Al", "Randevu Sorgula", "Yönetici Paneli"],
-        "hero_title": "CarePlus Sağlık & Medikal Turizm Portalı",
-        "hero_sub": "Diş Estetiği, Saç Ekimi ve Medikal Estetik için 7/24 Online Randevu ve Hasta Yönetim Sistemi.",
-        "services_title": "🌟 Popüler Tedavilerimiz ve Uzmanlarımız",
-        "book_title": "📅 Online Randevu Oluştur",
-        "book_desc": "Lütfen bilgilerinizi eksiksiz doldurun. Anında onay kodunuz oluşturulacaktır.",
-        "name": "Adınız Soyadınız *",
-        "phone": "Telefon / WhatsApp Numaranız *",
-        "email": "E-Posta Adresiniz",
-        "country": "Ülke / Şehir",
-        "service": "Hizmet / Bölüm Seçiniz",
-        "doctor": "Doktor / Uzman Seçiniz",
-        "date": "Randevu Tarihi",
-        "time": "Randevu Saati",
-        "notes": "Özel Notunuz (VIP Transfer, Otel Talebi vb.)",
-        "submit": "✅ Randevuyu Onayla ve Kaydet",
-        "success_msg": "🎉 Randevunuz başarıyla oluşturuldu! Takip Kodunuz:",
-        "error_msg": "⚠️ Lütfen Ad Soyad ve Telefon alanlarını doldurunuz.",
-        "slot_taken": "❌ Seçtiğiniz doktor için bu tarih ve saat dolu! Lütfen başka bir saat seçiniz.",
-        "track_title": "🔍 Randevu Durumu Sorgula",
-        "track_input": "Takip Kodunuzu (Örn: CP-1024) veya Telefon Numaranızı Girin",
-        "track_btn": "Sorgula",
-        "track_not_found": "Kayıt bulunamadı. Lütfen bilgilerinizi kontrol edin.",
-        "admin_title": "⚙️ Klinik Yönetim & CRM Paneli",
-        "kpi_total": "Toplam Randevu",
-        "kpi_confirmed": "Onaylanan",
-        "kpi_pending": "Bekleyen",
-        "kpi_revenue": "Tahmini Gelir (€)",
-        "admin_table": "📋 Tüm Randevular (Durumu tabloda çift tıklayarak değiştirebilirsiniz)",
-        "save_changes": "💾 Değişiklikleri Kaydet",
-        "saved_toast": "Değişiklikler başarıyla kaydedildi!",
-        "export_excel": "📥 Excel Olarak İndir (.xlsx)",
-        "chart_dept": "Bölümlere Göre Randevu Dağılımı",
-        "chart_status": "Randevu Durum Analizi"
-    },
-    "🇬🇧 English": {
-        "lang_code": "EN",
-        "menu_title": "CarePlus Menu",
-        "nav": ["Home", "Book Appointment", "Track Booking", "Admin Panel"],
-        "hero_title": "CarePlus Health & Medical Tourism Portal",
-        "hero_sub": "24/7 Online Booking & Patient Management System for Dental, Hair Transplant & Aesthetics.",
-        "services_title": "🌟 Our Popular Treatments & Specialists",
-        "book_title": "📅 Book an Online Appointment",
-        "book_desc": "Please fill in your details below. Your instant tracking code will be generated.",
-        "name": "Full Name *",
-        "phone": "Phone / WhatsApp Number *",
-        "email": "Email Address",
-        "country": "Country / City",
-        "service": "Select Department / Treatment",
-        "doctor": "Select Doctor / Specialist",
-        "date": "Preferred Date",
-        "time": "Preferred Time",
-        "notes": "Special Notes (VIP Airport Transfer, Hotel Request, etc.)",
-        "submit": "✅ Confirm & Book Appointment",
-        "success_msg": "🎉 Your appointment is booked! Your Tracking Code:",
-        "error_msg": "⚠️ Please fill in both Full Name and Phone fields.",
-        "slot_taken": "❌ This time slot is already booked for the selected specialist! Please pick another time.",
-        "track_title": "🔍 Track Your Appointment",
-        "track_input": "Enter your Tracking Code (e.g., CP-1024) or Phone Number",
-        "track_btn": "Search",
-        "track_not_found": "No booking found. Please check your code or phone number.",
-        "admin_title": "⚙️ Clinic Management & CRM Dashboard",
-        "kpi_total": "Total Bookings",
-        "kpi_confirmed": "Confirmed",
-        "kpi_pending": "Pending",
-        "kpi_revenue": "Est. Revenue (€)",
-        "admin_table": "📋 All Appointments (Double-click 'Status' cell to update)",
-        "save_changes": "💾 Save Changes",
-        "saved_toast": "Changes saved successfully!",
-        "export_excel": "📥 Export to Excel (.xlsx)",
-        "chart_dept": "Appointments by Department",
-        "chart_status": "Booking Status Breakdown"
-    },
-    "🇷🇺 Русский": {
-        "lang_code": "RU",
-        "menu_title": "Меню CarePlus",
-        "nav": ["Главная", "Записаться", "Проверка записи", "Панель Админа"],
-        "hero_title": "Портал здоровья и медтуризма CarePlus",
-        "hero_sub": "Онлайн-запись 24/7: стоматология, пересадка волос и эстетическая медицина в Турции.",
-        "services_title": "🌟 Популярные процедуры и специалисты",
-        "book_title": "📅 Онлайн-запись на прием",
-        "book_desc": "Заполните форму ниже. Вы мгновенно получите код отслеживания.",
-        "name": "Имя и Фамилия *",
-        "phone": "Телефон / WhatsApp *",
-        "email": "Электронная почта",
-        "country": "Страна / Город",
-        "service": "Выберите отделение / процедуру",
-        "doctor": "Выберите врача",
-        "date": "Дата приема",
-        "time": "Время приема",
-        "notes": "Примечания (VIP-трансфер, отель, переводчик)",
-        "submit": "✅ Подтвердить запись",
-        "success_msg": "🎉 Ваша запись успешно создана! Код отслеживания:",
-        "error_msg": "⚠️ Пожалуйста, укажите Имя и Телефон.",
-        "slot_taken": "❌ Это время уже занято у выбранного врача! Выберите другое время.",
-        "track_title": "🔍 Проверить статус записи",
-        "track_input": "Введите код записи (напр. CP-1024) или номер телефона",
-        "track_btn": "Найти",
-        "track_not_found": "Запись не найдена. Проверьте введенные данные.",
-        "admin_title": "⚙️ Панель управления клиникой (CRM)",
-        "kpi_total": "Всего записей",
-        "kpi_confirmed": "Подтверждено",
-        "kpi_pending": "В ожидании",
-        "kpi_revenue": "Ожид. доход (€)",
-        "admin_table": "📋 Все записи (Дважды кликните по статусу для изменения)",
-        "save_changes": "💾 Сохранить изменения",
-        "saved_toast": "Изменения успешно сохранены!",
-        "export_excel": "📥 Скачать Excel (.xlsx)",
-        "chart_dept": "Записи по отделениям",
-        "chart_status": "Статус записей"
-    },
-    "🇩🇪 Deutsch": {
-        "lang_code": "DE",
-        "menu_title": "CarePlus Menü",
-        "nav": ["Startseite", "Termin Buchen", "Termin Prüfen", "Admin-Bereich"],
-        "hero_title": "CarePlus Gesundheits- & Medizintourismus-Portal",
-        "hero_sub": "24/7 Online-Terminbuchung für Zahnästhetik, Haartransplantation und Schönheitschirurgie.",
-        "services_title": "🌟 Unsere Behandlungen & Spezialisten",
-        "book_title": "📅 Online-Termin vereinbaren",
-        "book_desc": "Bitte füllen Sie das Formular aus. Sie erhalten sofort Ihren Tracking-Code.",
-        "name": "Vor- und Nachname *",
-        "phone": "Telefon / WhatsApp Nummer *",
-        "email": "E-Mail-Adresse",
-        "country": "Land / Stadt",
-        "service": "Abteilung / Behandlung wählen",
-        "doctor": "Arzt / Spezialist wählen",
-        "date": "Wunschdatum",
-        "time": "Wunschuhrzeit",
-        "notes": "Besondere Wünsche (VIP-Transfer, Hotel, Dolmetscher)",
-        "submit": "✅ Termin verbindlich buchen",
-        "success_msg": "🎉 Ihr Termin wurde erfolgreich gebucht! Ihr Tracking-Code:",
-        "error_msg": "⚠️ Bitte füllen Sie Name und Telefonnummer aus.",
-        "slot_taken": "❌ Dieser Zeitpunkt ist beim gewählten Arzt bereits vergeben!",
-        "track_title": "🔍 Terminstatus abfragen",
-        "track_input": "Tracking-Code (z.B. CP-1024) oder Telefonnummer eingeben",
-        "track_btn": "Suchen",
-        "track_not_found": "Kein Eintrag gefunden. Bitte überprüfen Sie Ihre Eingabe.",
-        "admin_title": "⚙️ Klinik-Management & CRM-Dashboard",
-        "kpi_total": "Termine Gesamt",
-        "kpi_confirmed": "Bestätigt",
-        "kpi_pending": "Ausstehend",
-        "kpi_revenue": "Geschätzter Umsatz (€)",
-        "admin_table": "📋 Alle Termine (Doppelklick auf 'Status' zum Ändern)",
-        "save_changes": "💾 Änderungen speichern",
-        "saved_toast": "Änderungen erfolgreich gespeichert!",
-        "export_excel": "📥 Als Excel herunterladen (.xlsx)",
-        "chart_dept": "Termine nach Abteilung",
-        "chart_status": "Buchungsstatus"
-    }
-}
-
-# --- DEPARTMENTS, DOCTORS & PRICES ---
-CATALOG = {
-    "Hollywood Smile / Dental (Diş Estetiği)": {
-        "doctors": ["Dt. Ayşe Kaya", "Dt. Burak Yılmaz"],
-        "price": 1200,
-        "icon": "🦷"
-    },
-    "Sapphire FUE Hair Transplant (Saç Ekimi)": {
-        "doctors": ["Dr. Can Çelik", "Dr. Kerem Arslan"],
-        "price": 1800,
-        "icon": "💇‍♂️"
-    },
-    "Medical Aesthetics & Botox (Medikal Estetik)": {
-        "doctors": ["Uzm. Dr. Zeynep Nur", "Dr. Selin Demir"],
-        "price": 450,
-        "icon": "✨"
-    },
-    "Check-Up & Consultation (Genel Muayene)": {
-        "doctors": ["Prof. Dr. Ahmet Vural"],
-        "price": 150,
-        "icon": "🩺"
-    }
-}
-
-TIME_SLOTS = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"]
-
-# --- INITIALIZE SESSION STATE DATABASE ---
-if "bookings_df" not in st.session_state:
-    initial_data = [
-        {"Code": "CP-1021", "Date": "2026-10-26", "Time": "10:00", "Patient": "Alexander Ivanov", "Phone": "+7 916 123 4567", "Country": "Russia", "Department": "Sapphire FUE Hair Transplant (Saç Ekimi)", "Doctor": "Dr. Can Çelik", "Price_EUR": 1800, "Status": "Confirmed", "Notes": "VIP Airport Pickup requested"},
-        {"Code": "CP-1022", "Date": "2026-10-26", "Time": "14:00", "Patient": "Hans Müller", "Phone": "+49 170 987 6543", "Country": "Germany", "Department": "Hollywood Smile / Dental (Diş Estetiği)", "Doctor": "Dt. Ayşe Kaya", "Price_EUR": 1200, "Status": "Confirmed", "Notes": "4-Star Hotel in Alanya"},
-        {"Code": "CP-1023", "Date": "2026-10-27", "Time": "11:00", "Patient": "Sarah Jenkins", "Phone": "+44 7700 900077", "Country": "UK", "Department": "Medical Aesthetics & Botox (Medikal Estetik)", "Doctor": "Uzm. Dr. Zeynep Nur", "Price_EUR": 450, "Status": "Pending", "Notes": "First consultation"},
-        {"Code": "CP-1024", "Date": "2026-10-28", "Time": "09:00", "Patient": "Mehmet Özkan", "Phone": "+90 532 111 2233", "Country": "Turkey", "Department": "Check-Up & Consultation (Genel Muayene)", "Doctor": "Prof. Dr. Ahmet Vural", "Price_EUR": 150, "Status": "Confirmed", "Notes": "Local patient"}
-    ]
-    st.session_state["bookings_df"] = pd.DataFrame(initial_data)
-
-# --- SIDEBAR: LANGUAGE & NAVIGATION ---
-with st.sidebar:
-    st.markdown("## 🏥 **CarePlus Pro**")
-    selected_lang = st.selectbox(
-        "🌍 Dil / Language / Язык / Sprache",
-        list(TRANSLATIONS.keys()),
-        index=0  # Turkish is Default
-    )
-    t = TRANSLATIONS[selected_lang]
-    
-    st.markdown("---")
-    selected_nav = option_menu(
-        menu_title=t["menu_title"],
-        options=t["nav"],
-        icons=["house-heart", "calendar2-check", "search", "speedometer2"],
-        menu_icon="hospital",
-        default_index=0,
-        styles={
-            "container": {"padding": "5px", "background-color": "#f8f9fa"},
-            "icon": {"color": "#0d6efd", "font-size": "18px"},
-            "nav-link": {"font-size": "15px", "text-align": "left", "margin": "2px"},
-            "nav-link-selected": {"background-color": "#0d6efd", "color": "white"},
+# ---------------------------------------------------------
+# Dynamic Database / Session State Setup
+# ---------------------------------------------------------
+if "treatments_db" not in st.session_state:
+    st.session_state.treatments_db = [
+        {
+            "id": "dental",
+            "name": "Hollywood Smile / Dental Estetik",
+            "doctors": "Dt. Ayşe Kaya, Dt. Burak Yılmaz",
+            "price": 1250,
+            "currency": "EUR €",
+            "image": "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=800&q=80",
+            "duration": "5 Days Package",
+            "tag": "High Demand"
+        },
+        {
+            "id": "hair",
+            "name": "Sapphire FUE Hair Transplant (Saç Ekimi)",
+            "doctors": "Dr. Can Çelik, Dr. Kerem Arslan",
+            "price": 1850,
+            "currency": "EUR €",
+            "image": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=800&q=80",
+            "duration": "3 Days Package (VIP Transfer Included)",
+            "tag": "All Inclusive"
+        },
+        {
+            "id": "aesthetics",
+            "name": "Medical Aesthetics & Botox (Medikal Estetik)",
+            "doctors": "Dr. Elif Demir, Dr. Selin Doğan",
+            "price": 450,
+            "currency": "EUR €",
+            "image": "https://images.unsplash.com/photo-1512290900672-1f5bebb23cb2?auto=format&fit=crop&w=800&q=80",
+            "duration": "Same Day Procedure",
+            "tag": "Instant Result"
+        },
+        {
+            "id": "checkup",
+            "name": "Full Body Executive VIP Check-Up",
+            "doctors": "Prof. Dr. Mehmet Özkan",
+            "price": 650,
+            "currency": "EUR €",
+            "image": "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80",
+            "duration": "1 Full Day Comprehensive",
+            "tag": "Preventive Care"
         }
-    )
-    st.markdown("---")
-    st.caption("📍 Alanya / Antalya / İstanbul\n📞 7/24 WhatsApp: +90 500 000 0000")
+    ]
 
-# --- PAGE 1: HOME (ANA SAYFA) ---
-if selected_nav == t["nav"][0]:
-    st.markdown(f"""
-    <div class="hero-box">
-        <h1 style="margin:0; font-size:2.1rem;">{t['hero_title']}</h1>
-        <p style="margin-top:10px; font-size:1.1rem; opacity:0.95;">{t['hero_sub']}</p>
-    </div>
+if "bookings_db" not in st.session_state:
+    st.session_state.bookings_db = pd.DataFrame([
+        {
+            "Booking ID": "CP-1011",
+            "Date": "2026-10-27",
+            "Time": "10:00",
+            "Patient Name": "Alexander Miller",
+            "Phone": "+44 7911 123456",
+            "Country": "United Kingdom",
+            "Treatment": "Sapphire FUE Hair Transplant (Saç Ekimi)",
+            "Doctor": "Dr. Can Çelik",
+            "Total Price": "€1850",
+            "Status": "Confirmed",
+            "VIP Transfer": "Yes (Antalya Airport)"
+        },
+        {
+            "Booking ID": "CP-1012",
+            "Date": "2026-10-28",
+            "Time": "11:30",
+            "Patient Name": "Elena Petrova",
+            "Phone": "+7 916 555 4321",
+            "Country": "Russia",
+            "Treatment": "Hollywood Smile / Dental Estetik",
+            "Doctor": "Dt. Ayşe Kaya",
+            "Total Price": "€1250",
+            "Status": "Confirmed",
+            "VIP Transfer": "Yes (Gazipaşa-Alanya Airport)"
+        },
+        {
+            "Booking ID": "CP-1013",
+            "Date": "2026-10-29",
+            "Time": "14:00",
+            "Patient Name": "Markus Schmidt",
+            "Phone": "+49 170 9876543",
+            "Country": "Germany",
+            "Treatment": "Full Body Executive VIP Check-Up",
+            "Doctor": "Prof. Dr. Mehmet Özkan",
+            "Total Price": "€650",
+            "Status": "Pending",
+            "VIP Transfer": "No"
+        },
+        {
+            "Booking ID": "CP-1014",
+            "Date": "2026-10-30",
+            "Time": "15:30",
+            "Patient Name": "Zeynep Korkmaz",
+            "Phone": "+90 532 111 2233",
+            "Country": "Türkiye",
+            "Treatment": "Medical Aesthetics & Botox (Medikal Estetik)",
+            "Doctor": "Dr. Elif Demir",
+            "Total Price": "€450",
+            "Status": "Confirmed",
+            "VIP Transfer": "No"
+        }
+    ])
+
+# ---------------------------------------------------------
+# Sidebar Navigation & Multilingual Support
+# ---------------------------------------------------------
+with st.sidebar:
+    st.markdown("""
+        <div style='display: flex; align-items: center; gap: 12px; margin-bottom: 20px;'>
+            <div style='background: #0284c7; padding: 10px; border-radius: 12px; color: white; font-size: 1.5rem;'>🩺</div>
+            <div>
+                <h3 style='margin: 0; font-weight: 800; font-size: 1.25rem; color: #0f172a;'>CarePlus Pro</h3>
+                <span style='font-size: 0.78rem; color: #64748b;'>Clinic & Medical Tourism Portal</span>
+            </div>
+        </div>
     """, unsafe_allow_html=True)
     
-    st.subheader(t["services_title"])
-    
-    cols = st.columns(2)
-    for idx, (dept, info) in enumerate(CATALOG.items()):
-        with cols[idx % 2]:
-            st.markdown(f"""
-            <div class="service-card">
-                <h4 style="margin:0; color:#0d6efd;">{info['icon']} {dept}</h4>
-                <p style="margin:8px 0 4px 0; color:#495057;"><b>👨‍⚕️ Doctors:</b> {', '.join(info['doctors'])}</p>
-                <p style="margin:0; color:#198754; font-weight:600;">💶 Package Price: €{info['price']}</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-# --- PAGE 2: BOOK APPOINTMENT (RANDEVU AL) ---
-elif selected_nav == t["nav"][1]:
-    st.title(t["book_title"])
-    st.write(t["book_desc"])
-    
-    # Dynamic Department -> Doctor selection outside form for instant reactivity
-    col_d1, col_d2 = st.columns(2)
-    with col_d1:
-        chosen_dept = st.selectbox(t["service"], list(CATALOG.keys()))
-    with col_d2:
-        available_docs = CATALOG[chosen_dept]["doctors"]
-        chosen_doc = st.selectbox(t["doctor"], available_docs)
-        
-    with st.form("booking_form", clear_on_submit=True):
-        c1, c2 = st.columns(2)
-        with c1:
-            p_name = st.text_input(t["name"], placeholder="Alexey Smirnov / Ahmet Yılmaz")
-            p_phone = st.text_input(t["phone"], placeholder="+90 5XX XXX XX XX")
-            p_country = st.text_input(t["country"], placeholder="Türkiye / Germany / Russia / UK")
-        with c2:
-            p_date = st.date_input(t["date"], min_value=datetime.date.today())
-            p_time = st.selectbox(t["time"], TIME_SLOTS)
-            p_notes = st.text_input(t["notes"])
-            
-        submitted = st.form_submit_button(t["submit"], type="primary", use_container_width=True)
-        
-        if submitted:
-            if not p_name.strip() or not p_phone.strip():
-                st.error(t["error_msg"])
-            else:
-                df = st.session_state["bookings_df"]
-                date_str = p_date.strftime("%Y-%m-%d")
-                # Check slot conflict
-                conflict = df[(df["Doctor"] == chosen_doc) & (df["Date"] == date_str) & (df["Time"] == p_time) & (df["Status"] != "Cancelled")]
-                if not conflict.empty:
-                    st.error(t["slot_taken"])
-                else:
-                    new_code = f"CP-{random.randint(1025, 9999)}"
-                    new_row = {
-                        "Code": new_code,
-                        "Date": date_str,
-                        "Time": p_time,
-                        "Patient": p_name.strip(),
-                        "Phone": p_phone.strip(),
-                        "Country": p_country.strip() if p_country.strip() else "N/A",
-                        "Department": chosen_dept,
-                        "Doctor": chosen_doc,
-                        "Price_EUR": CATALOG[chosen_dept]["price"],
-                        "Status": "Pending",
-                        "Notes": p_notes.strip()
-                    }
-                    st.session_state["bookings_df"] = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-                    st.success(f"{t['success_msg']} **{new_code}**")
-                    st.balloons()
-
-# --- PAGE 3: TRACK BOOKING (RANDEVU SORGULA) ---
-elif selected_nav == t["nav"][2]:
-    st.title(t["track_title"])
-    query = st.text_input(t["track_input"])
-    if st.button(t["track_btn"], type="primary"):
-        if query.strip():
-            df = st.session_state["bookings_df"]
-            res = df[df["Code"].str.contains(query.strip(), case=False, na=False) | df["Phone"].str.contains(query.strip(), case=False, na=False)]
-            if not res.empty:
-                st.dataframe(res, use_container_width=True, hide_index=True)
-            else:
-                st.warning(t["track_not_found"])
-
-# --- PAGE 4: ADMIN PANEL (YÖNETİCİ PANELİ) ---
-elif selected_nav == t["nav"][3]:
-    st.title(t["admin_title"])
-    df = st.session_state["bookings_df"]
-    
-    # KPIs
-    total_b = len(df)
-    conf_b = len(df[df["Status"] == "Confirmed"])
-    pend_b = len(df[df["Status"] == "Pending"])
-    rev_eur = df[df["Status"] == "Confirmed"]["Price_EUR"].sum()
-    
-    k1, k2, k3, k4 = st.columns(4)
-    k1.markdown(f'<div class="kpi-card"><div class="kpi-title">{t["kpi_total"]}</div><div class="kpi-value">{total_b}</div></div>', unsafe_allow_html=True)
-    k2.markdown(f'<div class="kpi-card" style="border-left-color:#198754;"><div class="kpi-title">{t["kpi_confirmed"]}</div><div class="kpi-value" style="color:#198754;">{conf_b}</div></div>', unsafe_allow_html=True)
-    k3.markdown(f'<div class="kpi-card" style="border-left-color:#ffc107;"><div class="kpi-title">{t["kpi_pending"]}</div><div class="kpi-value" style="color:#d39e00;">{pend_b}</div></div>', unsafe_allow_html=True)
-    k4.markdown(f'<div class="kpi-card" style="border-left-color:#0dcaf0;"><div class="kpi-title">{t["kpi_revenue"]}</div><div class="kpi-value">€{rev_eur:,}</div></div>', unsafe_allow_html=True)
-    
-    st.subheader(t["admin_table"])
-    
-    # Interactive Editable Table for Receptionist / Admin
-    edited_df = st.data_editor(
-        df,
-        column_config={
-            "Status": st.column_config.SelectboxColumn(
-                "Status",
-                options=["Pending", "Confirmed", "Completed", "Cancelled"],
-                required=True
-            )
-        },
-        use_container_width=True,
-        hide_index=True,
-        num_rows="dynamic"
+    lang = st.selectbox(
+        "🌐 Language / Dil / Язык / Sprache",
+        ["🇹🇷 Türkçe", "🇬🇧 English", "🇷🇺 Русский", "🇩🇪 Deutsch"]
     )
     
-    col_btn1, col_btn2 = st.columns([1, 1])
-    with col_btn1:
-        if st.button(t["save_changes"], type="primary", use_container_width=True):
-            st.session_state["bookings_df"] = edited_df
-            st.toast(t["saved_toast"], icon="✅")
-            st.rerun()
+    st.markdown("---")
+    menu = st.radio(
+        "Navigation",
+        [
+            "🏠 Ana Sayfa / Home",
+            "📅 Online Randevu Al / Book",
+            "🔍 Randevu Sorgula / Track",
+            "⚙️ Yönetici & Fiyat Paneli (Admin)"
+        ],
+        index=0
+    )
+    
+    st.markdown("---")
+    st.markdown("""
+        <div style='background: #f1f5f9; padding: 15px; border-radius: 14px; font-size: 0.82rem; color: #475569;'>
+            <b>📍 Clinic Locations:</b><br>
+            • Alanya Medical Suites<br>
+            • Antalya Health Hub<br>
+            • Istanbul International Center<br>
+            <br>
+            <b>📞 7/24 WhatsApp Concierge:</b><br>
+            +90 (555) 012 34 56
+        </div>
+    """, unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# VIEW 1: Home Page (Showcase Treatments & Services)
+# ---------------------------------------------------------
+if menu == "🏠 Ana Sayfa / Home":
+    st.markdown("""
+        <div class="hero-banner">
+            <span class="hero-badge">✦ Award-Winning Medical Tourism in Turkey</span>
+            <h1>CarePlus Health & Medical Tourism Portal</h1>
+            <p>Dünya standartlarında akredite kliniklerimiz, uzman cerrahlarımız ve 7/24 VIP hasta karşılama hizmetimizle sağlığınıza ve gülüşünüze değer katıyoruz.</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("### ⭐ Popüler Tedavi Paketlerimiz & Uzmanlarımız")
+    st.caption("Fiyatlar, doktor kadroları ve paketler Yönetici Panelinden canlı olarak güncellenebilir.")
+    
+    treatments = st.session_state.treatments_db
+    cols = st.columns(2)
+    
+    for idx, item in enumerate(treatments):
+        col = cols[idx % 2]
+        with col:
+            st.markdown(f"""
+                <div class="treatment-card">
+                    <img src="{item['image']}" class="treatment-img" alt="{item['name']}">
+                    <div class="treatment-body">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div class="treatment-title">{item['name']}</div>
+                            <span class="tag-badge">{item['tag']}</span>
+                        </div>
+                        <div class="treatment-doctor">👨‍⚕️ <b>Doktorlar:</b> {item['doctors']}</div>
+                        <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 8px;">⏱️ Paket Süresi: {item['duration']}</div>
+                        <div class="treatment-footer">
+                            <span class="treatment-price">{item['currency']} {item['price']}</span>
+                            <span style="font-size: 0.8rem; color: #0284c7; font-weight: 600;">Otel & VIP Transfer Dahil</span>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# VIEW 2: Online Booking Form
+# ---------------------------------------------------------
+elif menu == "📅 Online Randevu Al / Book":
+    st.markdown("""
+        <div style='background: white; border-radius: 20px; padding: 30px; border: 1px solid #e2e8f0; margin-bottom: 25px;'>
+            <h2 style='margin:0; font-weight: 800; color: #0f172a;'>📅 Online Randevu & VIP Konsültasyon Formu</h2>
+            <p style='color: #64748b; margin-top: 5px;'>Lütfen bilgilerinizi eksiksiz doldurunuz. Randevunuz anında sisteme kaydedilecek ve takip kodunuz üretilecektir.</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Treatment Options from dynamic state
+    treatment_names = [t["name"] for t in st.session_state.treatments_db]
+    
+    with st.form("booking_form", clear_on_submit=False):
+        c1, c2 = st.columns(2)
+        with c1:
+            selected_treatment_name = st.selectbox("Tedavi / Branş Seçiniz *", treatment_names)
+            # Find selected treatment object
+            selected_obj = next(t for t in st.session_state.treatments_db if t["name"] == selected_treatment_name)
             
-    with col_btn2:
-        # Excel Export
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            edited_df.to_excel(writer, index=False, sheet_name="Appointments")
-        st.download_button(
-            label=t["export_excel"],
-            data=output.getvalue(),
-            file_name="CarePlus_Appointments.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True
+            # Split doctors
+            doc_list = [d.strip() for d in selected_obj["doctors"].split(",")]
+            selected_doctor = st.selectbox("Tercih Edilen Doktor / Uzman *", doc_list)
+            full_name = st.text_input("Hasta Adı Soyadı *", placeholder="Örn: Alexey Smirnov / Ahmet Yılmaz")
+            phone = st.text_input("WhatsApp / Telefon Numarası *", placeholder="+90 5XX XXX XX XX veya +7 9XX XXX XX XX")
+            
+        with c2:
+            pref_date = st.date_input("Randevu Tarihi *", min_value=date.today())
+            pref_time = st.selectbox("Randevu Saati *", ["09:00", "10:30", "12:00", "14:00", "15:30", "17:00"])
+            country = st.selectbox("İkamet Ettiğiniz Ülke *", ["Türkiye", "Germany / Deutschland", "United Kingdom", "Russia / Россия", "Other"])
+            vip_transfer = st.checkbox("Havalimanı VIP Transfer ve Otel Rezervasyonu İstiyorum (+Ücretsiz Konsültasyon)", value=True)
+            notes = st.text_area("Özel İstekler / Tıbbi Geçmiş Notları (Opsiyonel)", placeholder="Daha önce operasyon geçirdiniz mi? Özel bir sağlık durumunuz var mı?")
+
+        # Price preview box
+        st.markdown(f"""
+            <div style='background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 15px; margin: 15px 0; display:flex; justify-content: space-between; align-items:center;'>
+                <span style='font-size: 0.95rem; color: #166534; font-weight: 600;'>💶 Tahmini Paket Tutarı:</span>
+                <span style='font-size: 1.4rem; color: #166534; font-weight: 800;'>{selected_obj['currency']} {selected_obj['price']}</span>
+            </div>
+        """, unsafe_allow_html=True)
+
+        submit = st.form_submit_button("✅ Randevuyu Onayla ve Takip Kodu Al")
+        
+        if submit:
+            if not full_name or not phone:
+                st.error("⚠️ Lütfen adınızı ve telefon numaranızı eksiksiz giriniz.")
+            else:
+                new_id = f"CP-{datetime.now().strftime('%d%H%M')}"
+                new_row = {
+                    "Booking ID": new_id,
+                    "Date": str(pref_date),
+                    "Time": pref_time,
+                    "Patient Name": full_name,
+                    "Phone": phone,
+                    "Country": country,
+                    "Treatment": selected_treatment_name,
+                    "Doctor": selected_doctor,
+                    "Total Price": f"{selected_obj['currency']} {selected_obj['price']}",
+                    "Status": "Confirmed",
+                    "VIP Transfer": "Yes" if vip_transfer else "No"
+                }
+                st.session_state.bookings_db = pd.concat([pd.DataFrame([new_row]), st.session_state.bookings_db], ignore_index=True)
+                st.balloons()
+                st.success(f"🎉 Tebrikler! Randevunuz başarıyla oluşturuldu. Takip Kodunuz: **{new_id}**")
+                st.info("Bu kod ile randevu durumunuzu 'Randevu Sorgula' sekmesinden dilediğiniz an takip edebilirsiniz.")
+
+# ---------------------------------------------------------
+# VIEW 3: Booking Tracker
+# ---------------------------------------------------------
+elif menu == "🔍 Randevu Sorgula / Track":
+    st.markdown("""
+        <div style='background: white; border-radius: 20px; padding: 30px; border: 1px solid #e2e8f0; margin-bottom: 25px;'>
+            <h2 style='margin:0; font-weight: 800; color: #0f172a;'>🔍 Hasta Randevu Durumu Sorgulama</h2>
+            <p style='color: #64748b;'>Randevu onay kodunuzu (örn: CP-1011) girerek randevu detaylarını ve transfer durumunuzu görüntüleyebilirsiniz.</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    code = st.text_input("Randevu Takip Kodu (Booking Reference):", placeholder="CP-1011").strip()
+    if code:
+        df = st.session_state.bookings_db
+        matched = df[df["Booking ID"].str.upper() == code.upper()]
+        if not matched.empty:
+            item = matched.iloc[0]
+            st.markdown(f"""
+                <div style='background: white; border-radius: 20px; border: 2px solid #0284c7; padding: 25px; box-shadow: 0 10px 30px rgba(2, 132, 199, 0.1);'>
+                    <div style='display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 15px;'>
+                        <h3 style='margin:0; color:#0284c7;'>Randevu Detayları - {item['Booking ID']}</h3>
+                        <span style='background:#dcfce7; color:#15803d; font-weight:700; padding:6px 14px; border-radius:20px;'>● {item['Status']}</span>
+                    </div>
+                    <div style='display:grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.95rem;'>
+                        <div><b>👤 Hasta:</b> {item['Patient Name']}</div>
+                        <div><b>🏥 Branş:</b> {item['Treatment']}</div>
+                        <div><b>👨‍⚕️ Doktor:</b> {item['Doctor']}</div>
+                        <div><b>📅 Tarih & Saat:</b> {item['Date']} @ {item['Time']}</div>
+                        <div><b>💶 Tutar:</b> {item['Total Price']}</div>
+                        <div><b>🚗 VIP Transfer:</b> {item['VIP Transfer']}</div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.error("❌ Bu koda ait bir randevu bulunamadı. Lütfen kontrol edip tekrar deneyiniz.")
+
+# ---------------------------------------------------------
+# VIEW 4: Admin Panel & Settings (Dynamic Clinic Management)
+# ---------------------------------------------------------
+elif menu == "⚙️ Yönetici & Fiyat Paneli (Admin)":
+    st.markdown("""
+        <div style='background: white; border-radius: 20px; padding: 25px; border: 1px solid #e2e8f0; margin-bottom: 25px; display:flex; justify-content:space-between; align-items:center;'>
+            <div>
+                <h2 style='margin:0; font-weight: 800; color: #0f172a;'>⚙️ CarePlus Clinic CRM & Fiyat Yönetim Paneli</h2>
+                <p style='color: #64748b; margin: 4px 0 0 0;'>Tüm hasta kayıtlarını, doktor atamalarını ve tedavi ücretlerini anlık olarak yönetin.</p>
+            </div>
+            <span style='background: #e0f2fe; color: #0369a1; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 0.85rem;'>Admin Modu Aktif</span>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # KPIs Top Row
+    df = st.session_state.bookings_db
+    total_bookings = len(df)
+    confirmed_count = len(df[df["Status"] == "Confirmed"])
+    est_revenue = f"€{total_bookings * 1150:,}"
+    
+    k1, k2, k3, k4 = st.columns(4)
+    with k1:
+        st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-title">Toplam Başvuru</div>
+                <div class="kpi-num">{total_bookings}</div>
+                <span style="color:#16a34a; font-size:0.8rem; font-weight:600;">↑ 18% Bu Hafta</span>
+            </div>
+        """, unsafe_allow_html=True)
+    with k2:
+        st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-title">Onaylanan Randevular</div>
+                <div class="kpi-num">{confirmed_count}</div>
+                <span style="color:#0284c7; font-size:0.8rem; font-weight:600;">Yüksek Doluluk</span>
+            </div>
+        """, unsafe_allow_html=True)
+    with k3:
+        st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-title">Tahmini Ciro Hacmi</div>
+                <div class="kpi-num">{est_revenue}</div>
+                <span style="color:#16a34a; font-size:0.8rem; font-weight:600;">Medikal Turizm</span>
+            </div>
+        """, unsafe_allow_html=True)
+    with k4:
+        st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-title">Aktif Doktor Sayısı</div>
+                <div class="kpi-num">8</div>
+                <span style="color:#64748b; font-size:0.8rem; font-weight:600;">4 Klinik Branşı</span>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    # Tabs for CRM vs Dynamic Treatment Settings
+    tab1, tab2, tab3 = st.tabs([
+        "📋 Hasta Kayıtları & CRM Tablosu", 
+        "🛠️ Tedavi, Doktor & Fiyat Ayarları", 
+        "📊 İstatistik ve Analiz Raporları"
+    ])
+    
+    # TAB 1: CRM Table & Edit
+    with tab1:
+        st.markdown("#### Canlı Hasta Listesi (Düzenlenebilir Tablo)")
+        edited_df = st.data_editor(
+            st.session_state.bookings_db,
+            use_container_width=True,
+            num_rows="dynamic",
+            column_config={
+                "Status": st.column_config.SelectboxColumn("Durum", options=["Confirmed", "Pending", "Completed", "Cancelled"])
+            }
         )
         
-    st.markdown("---")
-    c_chart1, c_chart2 = st.columns(2)
-    with c_chart1:
-        st.markdown(f"**{t['chart_dept']}**")
-        fig1 = px.pie(edited_df, names="Department", hole=0.4, color_discrete_sequence=px.colors.qualitative.Safe)
-        st.plotly_chart(fig1, use_container_width=True)
-    with c_chart2:
-        st.markdown(f"**{t['chart_status']}**")
-        fig2 = px.bar(edited_df["Status"].value_counts().reset_index(), x="Status", y="count", color="Status")
-        st.plotly_chart(fig2, use_container_width=True)
+        c_btn1, c_btn2 = st.columns([1, 4])
+        with c_btn1:
+            if st.button("💾 Değişiklikleri Kaydet"):
+                st.session_state.bookings_db = edited_df
+                st.success("Tüm değişiklikler kaydedildi!")
+        with c_btn2:
+            # Excel export
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                edited_df.to_excel(writer, index=False, sheet_name='Bookings')
+            st.download_button(
+                label="📥 Excel Olarak İndir (.xlsx)",
+                data=output.getvalue(),
+                file_name="CarePlus_Hasta_Listesi.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
+    # TAB 2: Dynamic Management of Doctors, Pricing, Currency
+    with tab2:
+        st.markdown("#### 🛠️ Tedavi Paketleri, Doktor Kadroları ve Fiyatları Güncelleyin")
+        st.caption("Burada yaptığınız değişiklikler ana sayfadaki kartlara ve randevu formundaki seçeneklere otomatik yansır.")
+        
+        for idx, treat in enumerate(st.session_state.treatments_db):
+            with st.expander(f"🔹 {treat['name']} (Şu Anki Fiyat: {treat['currency']} {treat['price']})", expanded=False):
+                tc1, tc2 = st.columns([2, 1])
+                with tc1:
+                    new_name = st.text_input(f"Tedavi / Paket Adı #{idx+1}", value=treat["name"], key=f"name_{idx}")
+                    new_docs = st.text_input(f"Doktor Kadrosu (Virgülle ayırın) #{idx+1}", value=treat["doctors"], key=f"docs_{idx}")
+                    new_dur = st.text_input(f"Paket Süresi / Açıklama #{idx+1}", value=treat["duration"], key=f"dur_{idx}")
+                with tc2:
+                    new_price = st.number_input(f"Paket Fiyatı #{idx+1}", value=int(treat["price"]), step=50, key=f"price_{idx}")
+                    new_curr = st.selectbox(f"Para Birimi #{idx+1}", ["EUR €", "USD $", "TRY ₺", "GBP £"], 
+                                           index=["EUR €", "USD $", "TRY ₺", "GBP £"].index(treat.get("currency", "EUR €")), 
+                                           key=f"curr_{idx}")
+                    new_tag = st.text_input(f"Etiket Rozeti #{idx+1}", value=treat["tag"], key=f"tag_{idx}")
+                
+                if st.button(f"Güncellemeleri Kaydet ({treat['id']})", key=f"save_treat_{idx}"):
+                    st.session_state.treatments_db[idx]["name"] = new_name
+                    st.session_state.treatments_db[idx]["doctors"] = new_docs
+                    st.session_state.treatments_db[idx]["duration"] = new_dur
+                    st.session_state.treatments_db[idx]["price"] = new_price
+                    st.session_state.treatments_db[idx]["currency"] = new_curr
+                    st.session_state.treatments_db[idx]["tag"] = new_tag
+                    st.success(f"{new_name} paketi başarıyla güncellendi! Ana sayfayı kontrol edebilirsiniz.")
+                    st.rerun()
+
+    # TAB 3: Visual Analytics
+    with tab3:
+        st.markdown("#### 📊 Klinik Performans Grafikleri")
+        g1, g2 = st.columns(2)
+        with g1:
+            fig1 = px.pie(
+                df, 
+                names="Treatment", 
+                title="Tedavi Branşlarına Göre Başvuru Dağılımı",
+                hole=0.45,
+                color_discrete_sequence=px.colors.qualitative.Pastel
+            )
+            fig1.update_layout(margin=dict(t=40, b=20, l=20, r=20))
+            st.plotly_chart(fig1, use_container_width=True)
+            
+        with g2:
+            fig2 = px.histogram(
+                df, 
+                x="Country", 
+                color="Status", 
+                barmode="group",
+                title="Ülkelere Göre Hasta Kökenleri",
+                color_discrete_sequence=['#0284c7', '#38bdf8', '#94a3b8']
+            )
+            fig2.update_layout(margin=dict(t=40, b=20, l=20, r=20))
+            st.plotly_chart(fig2, use_container_width=True)
