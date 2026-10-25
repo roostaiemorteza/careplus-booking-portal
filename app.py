@@ -647,4 +647,5 @@ elif menu == "⚙️ Yönetici & CRM Paneli (Admin)":
         with st.form("add_new_treatment_form"):
             add_name = st.text_input("Yeni Tedavi / Paket Adı (Örn: Rhinoplasty / Burun Estetiği)")
             add_docs = st.text_input("Görevli Doktor(lar) (Örn: Op. Dr. Hakan Yıldız)")
-            add_dur = st.text_i
+               add_dur = st.text_input("Tedavi Süresi (Örn: 3 Gün)", "3 Gün")
+
